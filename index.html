@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ricciardi Joyas — Asistente WhatsApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --gold-dark: #8B6914;
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --surface2: #1C1C1C;
+    --border: rgba(201,168,76,0.2);
+    --text: #F5F0E8;
+    --text-muted: #8A8070;
+    --wa-green: #25D366;
+    --bubble-out: #1F2C1F;
+    --bubble-in: #1C1C1C;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .page-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+  .phone-frame {
+    width: 100%;
+    max-width: 390px;
+    background: var(--surface);
+    border-radius: 40px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 0 80px rgba(201,168,76,0.08), 0 40px 80px rgba(0,0,0,0.6);
+  }
+  .wa-header {
+    background: #1F1F1F;
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+  }
+  .back-arrow { color: var(--wa-green); font-size: 20px; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; color: #0A0A0A; font-weight: 600; flex-shrink: 0;
+  }
+  .contact-info { flex: 1; }
+  .contact-name { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.2; }
+  .contact-status { font-size: 12px; color: var(--wa-green); margin-top: 1px; }
+  .header-icons { display: flex; gap: 16px; color: var(--text-muted); font-size: 18px; }
+  .chat-area {
+    height: 460px; overflow-y: auto;
+    padding: 16px 12px;
+    background-image: radial-gradient(ellipse at 20% 80%, rgba(201,168,76,0.03) 0%, transparent 50%);
+    scroll-behavior: smooth;
+  }
+  .chat-area::-webkit-scrollbar { width: 3px; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .date-divider { text-align: center; margin: 8px 0 16px; }
+  .date-divider span {
+    font-size: 11px; color: var(--text-muted);
+    background: rgba(255,255,255,0.05);
+    padding: 3px 10px; border-radius: 10px;
+  }
+  .bubble-wrap { display: flex; margin-bottom: 4px; animation: fadeIn 0.3s ease; }
+  .bubble-wrap.out { justify-content: flex-end; }
+  .bubble-wrap.in { justify-content: flex-start; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .bubble {
+    max-width: 80%; padding: 8px 12px; border-radius: 12px;
+    font-size: 13.5px; line-height: 1.55; position: relative;
+  }
+  .bubble.out { background: var(--bubble-out); border-bottom-right-radius: 3px; color: var(--text); }
+  .bubble.in { background: var(--bubble-in); border: 0.5px solid var(--border); border-bottom-left-radius: 3px; color: var(--text); }
+  .bubble-time { font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 3px; display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+  .check { color: #53BDEB; font-size: 12px; }
+  .gold-tag { display: block; font-family: 'Cormorant Garamond', serif; font-size: 11px; letter-spacing: 0.15em; color: var(--gold); text-transform: uppercase; margin-bottom: 3px; }
+  .typing-wrap { padding: 0 12px; display: none; }
+  .typing-indicator {
+    display: flex; align-items: center; gap: 4px;
+    padding: 10px 14px; background: var(--bubble-in);
+    border: 0.5px solid var(--border); border-radius: 12px;
+    border-bottom-left-radius: 3px; width: fit-content; margin-bottom: 8px;
+  }
+  .typing-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); animation: typingPulse 1.4s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingPulse {
+    0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+    30% { opacity: 1; transform: scale(1); }
+  }
+  .cotizacion-card {
+    background: rgba(201,168,76,0.07); border: 0.5px solid rgba(201,168,76,0.3);
+    border-radius: 10px; padding: 10px 12px; margin-top: 8px; font-size: 12.5px;
+  }
+  .cot-row { display: flex; justify-content: space-between; padding: 3px 0; color: var(--text-muted); }
+  .cot-row.total { border-top: 0.5px solid var(--border); margin-top: 6px; padding-top: 6px; color: var(--gold-light); font-weight: 500; }
+  .quick-replies {
+    display: flex; gap: 8px; padding: 8px 12px 6px;
+    overflow-x: auto; background: #1A1A1A; scrollbar-width: none;
+  }
+  .quick-replies::-webkit-scrollbar { display: none; }
+  .qr-btn {
+    white-space: nowrap; font-family: 'DM Sans', sans-serif; font-size: 12px;
+    padding: 6px 14px; border-radius: 16px; border: 0.5px solid var(--border);
+    background: transparent; color: var(--gold-light); cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  }
+  .qr-btn:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+  .input-area {
+    background: #1F1F1F; padding: 10px 12px;
+    display: flex; align-items: center; gap: 8px;
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+  }
+  .input-field {
+    flex: 1; background: var(--surface2); border: 0.5px solid rgba(255,255,255,0.08);
+    border-radius: 22px; padding: 10px 16px; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s;
+  }
+  .input-field::placeholder { color: var(--text-muted); }
+  .input-field:focus { border-color: rgba(201,168,76,0.4); }
+  .send-btn {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--wa-green);
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s; flex-shrink: 0;
+  }
+  .send-btn:hover { transform: scale(1.05); }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn svg { width: 18px; height: 18px; fill: white; }
+  .demo-badge {
+    position: fixed; top: 16px; right: 16px;
+    background: rgba(201,168,76,0.12); border: 0.5px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 11px;
+    color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-badge">Demo · IA en vivo</div>
+
+<div class="page-title">Ricciardi Joyas</div>
+<div class="page-sub">Asistente virtual · WhatsApp Business · 11 2520-2520</div>
+
+<div class="phone-frame">
+  <div class="wa-header">
+    <div class="back-arrow">‹</div>
+    <div class="avatar">R</div>
+    <div class="contact-info">
+      <div class="contact-name">Ricciardi Joyas ✦</div>
+      <div class="contact-status">en línea</div>
+    </div>
+    <div class="header-icons"><span>📹</span><span>📞</span><span>⋮</span></div>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="date-divider"><span>Hoy</span></div>
+    <div class="bubble-wrap in">
+      <div class="bubble in">
+        <span class="gold-tag">Ricciardi Joyas</span>
+        ¡Hola! Bienvenido/a a Joyería Ricciardi 💎 Somos líderes en compra de oro, alhajas, brillantes y relojes de primeras marcas en Argentina, con más de décadas de trayectoria en Recoleta.
+        <br><br>Estoy aquí para darte una cotización preliminar, responder tus consultas o coordinar tu visita. ¿En qué te puedo ayudar?
+        <div class="bubble-time">10:14 AM</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="typing-wrap" id="typingWrap">
+    <div class="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  </div>
+
+  <div class="quick-replies">
+    <button class="qr-btn" onclick="sendQuick('Quiero cotizar mis joyas de oro')">💍 Cotizar joyas de oro</button>
+    <button class="qr-btn" onclick="sendQuick('Tengo un Rolex para vender')">⌚ Vender Rolex</button>
+    <button class="qr-btn" onclick="sendQuick('Tengo brillantes para vender')">💎 Vender brillantes</button>
+    <button class="qr-btn" onclick="sendQuick('¿Cuánto pagan por gramo de oro?')">📊 Precio del oro</button>
+    <button class="qr-btn" onclick="sendQuick('Quiero sacar un turno')">📅 Sacar turno</button>
+    <button class="qr-btn" onclick="sendQuick('¿Dónde están ubicados?')">📍 Ubicación</button>
+  </div>
+
+  <div class="input-area">
+    <input class="input-field" id="msgInput" type="text" placeholder="Escribí un mensaje..." onkeydown="if(event.key==='Enter') sendMessage()" />
+    <button class="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const SYSTEM = `Sos el asistente virtual de Joyería Ricciardi, la joyería líder de Argentina en compra de oro, alhajas usadas, brillantes y relojes de primeras marcas. Estás ubicados en Avenida Alvear 1572, Recoleta, CABA.
+
+Tu personalidad es cálida, confiable, profesional y discreta. Hablás en español rioplatense (vos, te, tu). Nunca decís que sos una IA o un bot. Si te preguntan, decís que sos el asistente de Ricciardi. Respondés de forma natural, como lo haría una persona real. Máximo 3-4 oraciones por mensaje para no abrumar.
+
+INFORMACIÓN DEL NEGOCIO:
+- Nombre: Joyería Ricciardi
+- Dirección: Av. Alvear 1572, Recoleta, CABA (con estacionamiento propio)
+- Horario: Lunes a viernes 9:30 a 18hs
+- WhatsApp: 11 2520-2520
+- Web: ricciardijoyas.com
+- Tasaciones: sin cargo y sin compromiso, se paga en efectivo en el momento
+
+LO QUE COMPRAN:
+1. ORO: Joyas 18K y 14K, piezas para fundición (mínimo 12 gramos), lingotes y monedas de oro. PAGAN HASTA $400.000 el gramo de oro 18K.
+2. ALHAJAS ANTIGUAS: Joyas victorianas, georgianas, Art Decó, piezas firmadas Cartier, Van Cleef, y otras firmas de lujo. Pagan precio internacional.
+3. BRILLANTES Y DIAMANTES: En todos los cortes y colores, sueltos o engarzados. PAGAN HASTA U$S 19.000 el quilate.
+4. RELOJES DE LUJO: Rolex, Patek Philippe, Ulysse Nardin, Cartier, Hublot, Panerai y todas las primeras marcas.
+5. OBRAS DE ARTE: Cuadros y vidrios firmados, platería, obras de artistas reconocidos.
+6. MONEDAS DE ORO: Krugerrand, Libra Esterlina, Mexicano, Chilenos y todo tipo de monedas de oro.
+
+CÓMO COTIZAR POR WHATSAPP:
+La cotización online es PRELIMINAR. El valor final requiere que el tasador vea la pieza en persona. Para dar una cotización preliminar, pedís:
+- Fotos de la pieza (frente, dorso, y cualquier marca o sello)
+- Peso aproximado si lo saben (para el oro)
+- Si tiene piedras, el tipo y tamaño estimado
+- Si es un reloj, el modelo y número de serie
+- Estado general de la pieza
+
+Para el ORO, el precio se calcula por gramo según la pureza (18K, 14K). Podés orientar con "hasta $400.000 el gramo de oro 18K".
+
+Para BRILLANTES, el precio depende de quilates, color, claridad y corte. Podés decir "hasta U$S 19.000 el quilate para brillantes".
+
+Para RELOJES, el precio depende del modelo, estado y autenticidad. Pedís modelo y fotos.
+
+AGENDAR TURNO:
+Preguntás nombre y día/horario preferido (L-V 9:30-18hs). Confirmás y decís que los espera el equipo de tasadores.
+
+REGLAS:
+- Siempre enfatizá que Ricciardi es la joyería que MÁS PAGA del mercado y que paga alhaja por alhaja (no por lote)
+- Mencioná que el pago es en efectivo y en el momento
+- Si alguien duda, invitalos a venir sin compromiso: la tasación es gratuita
+- Nunca inventes precios específicos para piezas sin verlas — siempre decí "preliminar" y que el valor final lo da el tasador
+- Si alguien menciona que fue a otra joyería, decí que Ricciardi paga valores internacionales y que vale la pena comparar`;
+
+let history = [];
+
+function getTime() {
+  return new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+}
+
+function addBubble(text, type) {
+  const area = document.getElementById('chatArea');
+  const wrap = document.createElement('div');
+  wrap.className = `bubble-wrap ${type}`;
+  const time = getTime();
+
+  if (type === 'in') {
+    let content = text.replace(/\n/g, '<br>');
+    if (text.includes('COTIZACION_CARD:')) {
+      const parts = text.split('COTIZACION_CARD:');
+      content = parts[0].replace(/\n/g,'<br>');
+      const card = `<div class="cotizacion-card">${parts[1].trim().replace(/\n/g,'<br>')}</div>`;
+      wrap.innerHTML = `<div class="bubble in"><span class="gold-tag">Ricciardi Joyas</span>${content}${card}<div class="bubble-time">${time}</div></div>`;
+    } else {
+      wrap.innerHTML = `<div class="bubble in"><span class="gold-tag">Ricciardi Joyas</span>${content}<div class="bubble-time">${time}</div></div>`;
+    }
+  } else {
+    wrap.innerHTML = `<div class="bubble out">${text.replace(/\n/g,'<br>')}<div class="bubble-time">${time} <span class="check">✓✓</span></div></div>`;
+  }
+
+  area.appendChild(wrap);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTyping(show) {
+  const tw = document.getElementById('typingWrap');
+  tw.style.display = show ? 'block' : 'none';
+  if (show) document.getElementById('chatArea').scrollTop = 999999;
+}
+
+async function callClaude(msg) {
+  history.push({role:'user', content: msg});
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: SYSTEM,
+      messages: history
+    })
+  });
+  const data = await res.json();
+  const reply = data.content?.[0]?.text || 'Disculpá, hubo un inconveniente. ¿Me repetís tu consulta?';
+  history.push({role:'assistant', content: reply});
+  return reply;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.disabled = true;
+  document.querySelector('.send-btn').disabled = true;
+  addBubble(text, 'out');
+  showTyping(true);
+  try {
+    const reply = await callClaude(text);
+    showTyping(false);
+    addBubble(reply, 'in');
+  } catch(e) {
+    showTyping(false);
+    addBubble('Disculpá, hubo un inconveniente técnico. Intentalo en un momento 🙏', 'in');
+  }
+  input.disabled = false;
+  document.querySelector('.send-btn').disabled = false;
+  input.focus();
+}
+
+function sendQuick(text) {
+  document.getElementById('msgInput').value = text;
+  sendMessage();
+}
+</script>
+</body>
+</html>
